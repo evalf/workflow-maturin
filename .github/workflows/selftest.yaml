@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release/*
+      - docker
 jobs:
   build-and-test:
     name: Build and test
