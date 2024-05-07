@@ -53,6 +53,7 @@ jobs:
             for ibuild, input in enumerate(targets):
                 test_runner = False
                 test_container = False
+                maturin_manylinux = 'auto'
 
                 if input['python'].startswith('cp3'):
                     python_version = '3.' + input['python'][3:]
@@ -61,21 +62,26 @@ jobs:
                     print(f'::error::unsupported value for `python`: {input["python"]}')
                     raise SystemExit(1)
 
-                if input['os'] == 'linux':
+                if input['os'] in ('linux', 'musllinux'):
                     runner_os = 'ubuntu-latest'
+                    arch = input['arch']
                     python_arch = 'x64'
-                    if input['arch'] == 'x86_64':
-                        maturin_target = 'x64'
+                    if input['os'] == 'musllinux':
+                        maturin_target = f'{arch}-unknown-linux-musl'
+                        maturin_manylinux = 'musllinux_1_1'
                     else:
-                        maturin_target = input['arch']
-                        if input.get('test', True):
-                            test_container = dict(
-                                aarch64='quay.io/pypa/manylinux_2_28_aarch64',
-                            ).get(input['arch'], None)
-                            if test_container is None:
-                                print(f'input: {json.dumps(input)}')
-                                print(f'::error::no test container defined for arch {input["arch"]}')
-                                raise SystemExit(1)
+                        maturin_target = arch
+                        maturin_manylinux = 'manylinux_2_17'
+                    if (input['os'] == 'musllinux' or arch != 'x86_64') and input.get('test', True):
+                        if arch not in ('x86_64', 'aarch64', 'i686'):
+                            print(f'input: {json.dumps(input)}')
+                            print(f'::error::no test container defined for arch {arch}')
+                            raise SystemExit(1)
+                        if maturin_manylinux == 'manylinux_2_17':
+                            # see https://peps.python.org/pep-0600/#legacy-manylinux-tags
+                            test_container = f'quay.io/pypa/manylinux2014_{arch}'
+                        else:
+                            test_container = f'quay.io/pypa/{maturin_manylinux}_{arch}'
                 elif input['os'] == 'macos':
                     runner_os = 'macos-latest'
                     python_arch = 'arm64'
@@ -109,11 +115,12 @@ jobs:
                     'python-version': python_version,
                     'python-arch': python_arch,
                     'maturin-target': maturin_target,
+                    'maturin-manylinux': maturin_manylinux,
                     'test-runner': test_runner,
                     'test-container': test_container,
                     'artifact': f'_workflow_maturin_binary_{ibuild}',
                 }
-                del runner_os, python_version, python_arch, maturin_target, test_runner, test_container
+                del runner_os, python_version, python_arch, maturin_target, maturin_manylinux, test_runner, test_container
                 build_matrix.append(output)
                 print(json.dumps(output))
 
@@ -136,7 +143,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.maturin-target }}
-          manylinux: auto
+          manylinux: ${{ matrix.maturin-manylinux }}
           args: --release
       - name: Locate wheel
         id: locate-wheel
