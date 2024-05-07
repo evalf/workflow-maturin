@@ -14,7 +14,7 @@ jobs:
         targets = []
         targets.extend(defaults | dict(os='linux', arch=arch) for arch in ('x86_64', 'aarch64'))
         targets.extend(defaults | dict(os='linux', arch=arch, test=False) for arch in ('armv7',))
-        targets.extend(defaults | dict(os='macos', arch=arch) for arch in ('x86_64', 'universal2'))
+        targets.append(defaults | dict(os='macos', arch='universal2'))
         targets.extend(defaults | dict(os='windows', arch=arch) for arch in ('x86_64', 'i686'))
   check:
     name: Test distribution

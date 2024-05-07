@@ -51,7 +51,6 @@ jobs:
             for input in targets:
                 test_runner = False
                 test_container = False
-                maturin_args = []
 
                 if input['python'].startswith('cp3'):
                     python_version = '3.' + input['python'][3:]
@@ -77,9 +76,12 @@ jobs:
                                 raise SystemExit(1)
                 elif input['os'] == 'macos':
                     runner_os = 'macos-latest'
-                    python_arch = maturin_target = 'x64'
-                    if input['arch'] == 'universal2':
-                        maturin_args.append('--universal2')
+                    python_arch = 'arm64'
+                    if input['arch'] != 'universal2':
+                        print(f'input: {json.dumps(input)}')
+                        print(f'::error::macos arch must be universal2, but got {input["arch"]}')
+                        raise SystemExit(1)
+                    maturin_target = 'universal2-apple-darwin'
                 elif input['os'] == 'windows':
                     runner_os = 'windows-latest'
                     if input['arch'] == 'x86_64':
@@ -105,11 +107,10 @@ jobs:
                     'python-version': python_version,
                     'python-arch': python_arch,
                     'maturin-target': maturin_target,
-                    'maturin-args': ' '.join(maturin_args),
                     'test-runner': test_runner,
                     'test-container': test_container,
                 }
-                del runner_os, python_version, python_arch, maturin_target, maturin_args, test_runner, test_container
+                del runner_os, python_version, python_arch, maturin_target, test_runner, test_container
                 build_matrix.append(output)
                 print(json.dumps(output))
 
@@ -133,7 +134,7 @@ jobs:
         with:
           target: ${{ matrix.maturin-target }}
           manylinux: auto
-          args: --release ${{ matrix.maturin-args }}
+          args: --release
       - name: Locate wheel
         id: locate-wheel
         shell: python
