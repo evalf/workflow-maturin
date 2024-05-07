@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - release/*
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
 jobs:
   build-and-test:
     name: Build and test

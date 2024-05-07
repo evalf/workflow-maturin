@@ -11,6 +11,8 @@ on:
         type: string
         required: false
         default: dist
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
 jobs:
   build-source:
     name: Build source distribution
