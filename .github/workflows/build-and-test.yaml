@@ -17,11 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install Maturin
@@ -124,9 +124,9 @@ jobs:
       matrix: ${{ fromJSON(needs.generate-build-matrix.outputs.build-matrix) }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           architecture: ${{ matrix.python-arch }}
@@ -151,7 +151,7 @@ jobs:
           python -m unittest -bv
       - name: Set up QEMU
         if: ${{ matrix.test-container }}
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
       - name: Run Python unittests
         if: ${{ matrix.test-container }}
         run: |
