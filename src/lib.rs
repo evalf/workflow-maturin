@@ -9,7 +9,6 @@ fn double(x: usize) -> usize {
 
 /// This module is implemented in Rust.
 #[pymodule]
-fn example(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(double, m)?)?;
-    Ok(())
+fn example(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(double, m)?)
 }
